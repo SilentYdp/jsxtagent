@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>江苏信托 · 智能体平台</title>
+  <meta name="description" content="江苏信托全公司智能体目录、对话详情与评分反馈、数据分析、合规与发布管理。"/>
+  <style>
+    /* ===== Apple 风格（与知识库平台统一）：深色渐变 + 玻璃面板 + 高可读性 ===== */
+    :root{
+      --bg: #0b0c0f;
+      --panel: rgba(255,255,255,0.08);
+      --panel-strong: rgba(255,255,255,0.14);
+      --border: rgba(255,255,255,0.16);
+      --text: rgba(255,255,255,0.92);
+      --text-dim: rgba(255,255,255,0.72);
+      --accent: #0a84ff; /* Apple 系统蓝 */
+      --green: #30d158;
+      --red: #ff453a;
+      --amber: #ffd60a;
+      --shadow: 0 12px 38px rgba(0,0,0,.35);
+      --radius: 18px;
+      --radius-lg: 22px;
+      --blur: 18px;
+    }
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f5f6f7;
+        --panel: rgba(255,255,255,0.7);
+        --panel-strong: rgba(255,255,255,0.9);
+        --border: rgba(0,0,0,0.08);
+        --text: rgba(0,0,0,0.86);
+        --text-dim: rgba(0,0,0,0.62);
+        --shadow: 0 10px 30px rgba(0,0,0,.08);
+      }
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",Helvetica,Arial,"PingFang SC","Hiragino Sans GB","Noto Sans CJK SC","Segoe UI",Roboto,"Microsoft YaHei",sans-serif;
+      background: radial-gradient(1200px 800px at 10% -10%, #1a2c46 0%, transparent 30%),
+                  radial-gradient(1000px 700px at 90% 10%, #2b134f 0%, transparent 35%),
+                  var(--bg);
+      color:var(--text);
+      letter-spacing:.2px;
+    }
+    a{color:var(--accent); text-decoration:none}
+
+    /* 顶栏 */
+    .nav{
+      position:sticky; top:0; z-index:50;
+      display:flex; align-items:center; gap:16px;
+      padding:14px 22px;
+      backdrop-filter:saturate(180%) blur(var(--blur));
+      background:linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.08));
+      border-bottom:1px solid var(--border);
+    }
+    .brand{display:flex; align-items:center; gap:12px; font-weight:800}
+    .logo{width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,#6dd5ff,#0a84ff 70%); box-shadow:inset 0 0 10px rgba(255,255,255,.3), 0 4px 10px rgba(0,0,0,.2)}
+    .chip{padding:6px 10px; border-radius:999px; border:1px solid var(--border); backdrop-filter:blur(10px); background:var(--panel); color:var(--text-dim); font-size:12px}
+    .search{display:flex; align-items:center; gap:10px; padding:8px 12px; border:1px solid var(--border); border-radius:12px; background:var(--panel-strong)}
+    .search input{flex:1; background:transparent; border:0; outline:none; color:var(--text); font-size:14px}
+    .btn{display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:12px; border:1px solid var(--border); background:var(--panel-strong); color:var(--text); cursor:pointer; font-weight:600}
+    .btn.primary{background:linear-gradient(180deg,#0a84ff,#0063e6); border-color:rgba(255,255,255,.2); color:#fff; box-shadow:0 8px 20px rgba(10,132,255,.33)}
+    .btn.ghost{background:var(--panel)}
+    .seg{display:flex; gap:8px}
+    .seg button{padding:8px 12px; border-radius:10px; border:1px solid var(--border); background:var(--panel-strong); color:var(--text); cursor:pointer; font-weight:600}
+    .seg button[aria-pressed="true"]{outline:2px solid color-mix(in oklab, var(--accent) 60%, transparent); box-shadow:inset 0 0 0 999px rgba(10,132,255,.1)}
+
+    /* 容器与面板 */
+    .container{max-width:1480px; margin:0 auto; padding:18px; display:grid; gap:16px}
+    .panel{background:var(--panel); backdrop-filter:saturate(180%) blur(var(--blur)); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow)}
+    .panel.pad{padding:18px}
+
+    /* 页面（首页极简 + 功能页） */
+    .pages{display:grid; gap:16px}
+    .page{display:none; gap:16px}
+    .page.active{display:grid}
+
+    /* 首页：极简 */
+    .hero{display:grid; grid-template-columns:1fr auto; align-items:center; gap:16px; padding:22px; border-radius:var(--radius-lg)}
+    .hero h1{margin:0; font-size:28px}
+    .hero p{margin:6px 0 0; color:var(--text-dim)}
+    .quick{display:flex; gap:10px; flex-wrap:wrap}
+    .stats{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
+    .stat{padding:14px; border-radius:14px; border:1px solid var(--border); background:var(--panel-strong)}
+    .stat .k{font-size:22px; font-weight:800}
+    .stat .t{color:var(--text-dim); font-size:12px}
+
+    /* Agents 功能页 */
+    .toolbar{display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; padding:14px}
+    .filters{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+    .select{padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:var(--panel-strong); color:var(--text)}
+    .grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; padding:14px}
+    @media (max-width:1200px){ .grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+    @media (max-width:760px){ .grid{grid-template-columns:1fr} }
+    .agent{display:flex; flex-direction:column; gap:12px; padding:16px; border:1px solid var(--border); border-radius:14px; background:var(--panel-strong)}
+    .row{display:flex; align-items:center; gap:12px}
+    .avatar{width:40px; height:40px; border-radius:12px; display:grid; place-items:center; font-weight:800; background:linear-gradient(135deg,#ffffff1a,transparent)}
+    .meta{color:var(--text-dim); font-size:13px}
+    .tag{display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid var(--border); color:var(--text-dim); margin-right:6px}
+    .badge{padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid var(--border)}
+    .badge.published{color:var(--green); border-color:color-mix(in oklab, var(--green) 40%, var(--border))}
+    .badge.beta{color:var(--amber); border-color:color-mix(in oklab, var(--amber) 40%, var(--border))}
+    .badge.draft{color:var(--text-dim)}
+
+    /* Feedback */
+    .table{overflow:hidden; border-radius:16px; border:1px solid var(--border)}
+    table{width:100%; border-collapse:separate; border-spacing:0}
+    thead tr{background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.06))}
+    th,td{padding:12px 14px; text-align:left; font-size:14px; border-bottom:1px solid var(--border)}
+    tbody tr:hover{background:rgba(255,255,255,.06)}
+
+    /* Analytics */
+    .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; padding:14px}
+    .kpi{padding:16px; border:1px solid var(--border); border-radius:14px; background:var(--panel-strong)}
+    .kpi h4{margin:0 0 6px; font-size:13px; color:var(--text-dim)}
+    .kpi .num{font-size:26px; font-weight:800}
+    .kpi canvas{width:100%; height:44px}
+
+    /* 设置 */
+    .kv{display:grid; grid-template-columns:180px 1fr; gap:10px 14px; padding:14px; align-items:center}
+
+    /* 详情弹窗（对话/评分/版本/配置/合规） */
+    dialog{border:1px solid var(--border); background:var(--panel-strong); color:var(--text); border-radius:16px; padding:0; box-shadow:var(--shadow); width:min(1020px,92vw)}
+    dialog::backdrop{backdrop-filter:blur(10px); background:rgba(0,0,0,.25)}
+    .sheet{display:grid; grid-template-columns:280px 1fr; min-height:60vh}
+    @media (max-width:900px){ .sheet{grid-template-columns:1fr} }
+    .sheet .side{border-right:1px solid var(--border)}
+    .sheet-head{padding:18px 18px 0}
+    .title{font-size:22px; font-weight:800; margin:0}
+    .sub{color:var(--text-dim); font-size:13px}
+    .tabbar{display:flex; gap:8px; padding:12px 18px; border-bottom:1px solid var(--border)}
+    .tab{padding:8px 12px; border-radius:10px; border:1px solid transparent; cursor:pointer}
+    .tab.active{border-color:var(--border); background:var(--panel)}
+    .sheet-body{padding:18px; display:flex; flex-direction:column; gap:16px}
+    .qa{display:flex; flex-direction:column; gap:12px}
+    .qa-item{padding:14px; border:1px solid var(--border); border-radius:12px; background:var(--panel)}
+    .qa-item .q{font-weight:700}
+    .qa-item .a{margin-top:6px}
+    .rate{display:flex; align-items:center; gap:6px; margin-top:8px}
+    .stars{display:inline-flex; gap:2px}
+    .star{width:18px; height:18px; cursor:pointer; opacity:.75}
+    .star.filled{opacity:1}
+    .feedback{width:100%; border:1px solid var(--border); border-radius:10px; padding:10px; background:transparent; color:var(--text)}
+
+    .footer{padding:20px; text-align:center; color:var(--text-dim)}
+    @media (prefers-reduced-motion:no-preference){
+      .btn,.agent,dialog{transition:all .25s ease}
+      .btn:hover{transform:translateY(-1px)}
+      .agent:hover{transform:translateY(-2px)}
+    }
+  </style>
+</head>
+<body>
+  <!-- 顶栏：品牌 + 全局搜索（聚焦即跳转到“目录”页） + 快速操作 -->
+  <header class="nav" role="banner">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <span>江苏信托 · 智能体平台</span>
+    </div>
+    <div class="search" role="search" style="margin-left:auto; min-width:320px; max-width:520px; flex:1;">
+      <span aria-hidden="true">🔎</span>
+      <input id="q-global" type="text" placeholder="搜索智能体、部门、标签… (⌘/Ctrl + K)" aria-label="搜索智能体"/>
+    </div>
+    <div class="seg" aria-label="主导航" style="margin-left:8px;">
+      <button class="chip" data-goto="home" aria-pressed="true">首页</button>
+      <button class="chip" data-goto="agents">目录</button>
+      <button class="chip" data-goto="feedback">反馈</button>
+      <button class="chip" data-goto="analytics">分析</button>
+      <button class="chip" data-goto="settings">设置</button>
+    </div>
+    <div style="margin-left:8px; display:flex; gap:8px;">
+      <button class="btn primary" id="btn-new">新建智能体</button>
+      <button class="btn" id="btn-publish">发布中心</button>
+      <button class="btn ghost" id="btn-settings">系统设置</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="pages">
+      <!-- ===== 首页（极简） ===== -->
+      <section id="page-home" class="page active">
+        <div class="panel hero">
+          <div>
+            <h1>统一的智能体管控与洞察</h1>
+            <p>查看公司在用智能体、深入到对话细节并可评分评价，沉淀数据与合规留痕。</p>
+          </div>
+          <div class="quick">
+            <button class="btn primary" data-goto="agents">进入目录</button>
+            <button class="btn" data-goto="analytics">查看分析</button>
+            <button class="btn ghost" data-goto="feedback">处理反馈</button>
+          </div>
+        </div>
+
+        <div class="panel pad">
+          <div class="stats">
+            <div class="stat"><div class="k" id="st-agents">0</div><div class="t">活跃智能体</div></div>
+            <div class="stat"><div class="k" id="st-sessions">0</div><div class="t">本周会话</div></div>
+            <div class="stat"><div class="k" id="st-csat">0</div><div class="t">平均满意度</div></div>
+            <div class="stat"><div class="k" id="st-resolution">0%</div><div class="t">自动解决率</div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 目录（Agents） ===== -->
+      <section id="page-agents" class="page">
+        <div class="panel toolbar">
+          <div class="search">
+            <span aria-hidden="true">🔎</span>
+            <input id="q" type="text" placeholder="搜索名称、描述、部门、标签…" aria-label="搜索目录"/>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <select id="sort" class="select" aria-label="排序">
+              <option value="recent">按最近更新</option>
+              <option value="rating">按评分</option>
+              <option value="usage">按使用量</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="panel pad" style="padding-top:12px;">
+          <div class="filters">
+            <div>
+              <label style="font-size:12px; color:var(--text-dim);">部门</label>
+              <select id="f-dept" class="select">
+                <option value="all">全部</option>
+                <option>客服</option><option>运营</option><option>风控</option><option>投研</option><option>IT</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--text-dim);">状态</label>
+              <select id="f-status" class="select">
+                <option value="all">全部</option>
+                <option value="已发布">已发布</option>
+                <option value="内测">内测</option>
+                <option value="草稿">草稿</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--text-dim);">模型</label>
+              <select id="f-model" class="select">
+                <option value="">全部</option>
+                <option>DeepSeek-R1</option><option>GPT-4o</option><option>Qwen-Max</option><option>Claude-3.5</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel grid" id="agentGrid" aria-label="智能体目录"></div>
+      </section>
+
+      <!-- ===== 反馈 ===== -->
+      <section id="page-feedback" class="page">
+        <div class="panel pad" style="display:flex; align-items:center; justify-content:space-between;">
+          <h2 style="margin:0;">低分反馈与工单</h2>
+          <div>
+            <button class="btn" id="exportFeedback">导出低分反馈</button>
+          </div>
+        </div>
+        <div class="panel table">
+          <table aria-label="低分反馈列表">
+            <thead><tr><th>时间</th><th>智能体</th><th>问题</th><th>评分</th><th>处理状态</th></tr></thead>
+            <tbody id="feedbackTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== 分析 ===== -->
+      <section id="page-analytics" class="page">
+        <div class="panel pad" style="display:flex; align-items:center; justify-content:space-between;">
+          <h2 style="margin:0;">使用与质量指标</h2>
+          <div>
+            <button class="btn" id="exportDashboard">导出数据</button>
+          </div>
+        </div>
+        <div class="panel kpis" id="kpis"></div>
+      </section>
+
+      <!-- ===== 设置 / 合规 ===== -->
+      <section id="page-settings" class="page">
+        <div class="panel pad">
+          <h2 style="margin:0 0 12px;">合规与安全</h2>
+          <div class="kv">
+            <div>PII脱敏</div><div><label><input type="checkbox" id="piiMask" checked/> 启用</label></div>
+            <div>审计日志</div><div><label><input type="checkbox" id="auditLog" checked/> 记录</label></div>
+            <div>提示词安全</div><div><label><input type="checkbox" id="promptGuard" checked/> 扫描</label></div>
+            <div>数据保留</div><div><select id="retention" class="select"><option>90天</option><option selected>180天</option><option>365天</option></select></div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <div class="footer">© <span id="year"></span> 江苏信托 · 智能体平台</div>
+  </main>
+
+  <!-- ===== 智能体详情（含对话评分） ===== -->
+  <dialog id="agentModal" aria-labelledby="agentTitle">
+    <div class="sheet">
+      <div class="side">
+        <div class="sheet-head">
+          <h2 class="title" id="agentTitle">智能体</h2>
+          <div class="sub" id="agentSub">—</div>
+        </div>
+        <div class="tabbar" role="tablist" aria-label="详情分组">
+          <button class="tab active" data-tab="overview">概览</button>
+          <button class="tab" data-tab="dialog">对话</button>
+          <button class="tab" data-tab="ratings">评分</button>
+          <button class="tab" data-tab="versions">版本</button>
+          <button class="tab" data-tab="config">配置</button>
+          <button class="tab" data-tab="compliance">合规</button>
+        </div>
+        <div style="padding:12px 18px; border-top:1px solid var(--border); display:grid; gap:10px;">
+          <button class="btn primary" id="openChat">打开 Chat</button>
+          <button class="btn" id="exportAgent">导出该智能体数据</button>
+          <button class="btn ghost" id="closeModal">关闭</button>
+        </div>
+      </div>
+      <div class="sheet-body">
+        <div id="tab-overview" class="tabview">
+          <div class="kv" id="overviewKV"></div>
+          <canvas id="agentUsage" height="80"></canvas>
+        </div>
+        <div id="tab-dialog" class="tabview" hidden>
+          <div class="qa" id="qaList"></div>
+        </div>
+        <div id="tab-ratings" class="tabview" hidden>
+          <div class="table">
+            <table>
+              <thead><tr><th>时间</th><th>评分</th><th>评语</th></tr></thead>
+              <tbody id="ratingsBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="tab-versions" class="tabview" hidden>
+          <div class="table">
+            <table>
+              <thead><tr><th>版本</th><th>说明</th><th>发布时间</th></tr></thead>
+              <tbody id="versionsBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="tab-config" class="tabview" hidden>
+          <div class="kv">
+            <div>基础模型</div><div id="cfgModel"></div>
+            <div>知识库</div><div id="cfgKB"></div>
+            <div>路由策略</div><div id="cfgRoute"></div>
+            <div>调用限制</div><div id="cfgQuota"></div>
+          </div>
+        </div>
+        <div id="tab-compliance" class="tabview" hidden>
+          <div class="kv">
+            <div>PII脱敏</div><div id="compPII">已开启</div>
+            <div>审计日志</div><div id="compAudit">已开启</div>
+            <div>提示词安全</div><div id="compPrompt">已开启</div>
+            <div>数据保留</div><div id="compRetention">180天</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    /* ===== 数据（可替换为后端接口） ===== */
+    const agents = [
+      {id:'ops-copilot', name:'运维 Copilot', dept:'IT', owner:'信息技术部', status:'已发布', model:'DeepSeek-R1', rating:4.7, usage:1820, cost:862.3, tags:['AIOps','知识库','自动化'],
+        desc:'IT 运维知识检索与自动化执行：日志检索、变更记录、标准化手册。',
+        versions:[{v:'1.3.0', note:'加入 CI/CD 步骤解析与风险提示', time:'2025-08-20'},{v:'1.2.0', note:'新增 Jira 工单对接', time:'2025-07-10'}],
+        config:{kb:['运维SOP','变更台账','CMDB'], route:'按意图路由至工具/检索/生成', quota:'每用户/日 500 次'},
+        dialogs:[
+          {q:'Nginx 502 如何排查？', a:'先检查上游服务：1) upstream 健康；2) 超时与连接数；3) /var/log/nginx/error.log；4) 必要时回滚最近变更。', t:'2025-08-26T10:21:00'},
+          {q:'如何导出近7天 K8s 节点负载？', a:'已生成 Grafana 报表链接并导出为 CSV：平台 > 监控中心 > 节点负载。', t:'2025-08-26T14:05:00'}]
+      },
+      {id:'pension-bot', name:'养老信托客服', dept:'客服', owner:'养老信托事业部', status:'内测', model:'GPT-4o', rating:4.3, usage:980, cost:420.1, tags:['客服','小程序','FAQ'],
+        desc:'客户在线咨询：产品咨询、流程指引、风险提示与转人工。',
+        versions:[{v:'0.9.2', note:'加入风险测评前置问询', time:'2025-08-18'}],
+        config:{kb:['养老信托产品手册','合规话术库'], route:'优先规则匹配，其次生成回答', quota:'并发上限 50'},
+        dialogs:[{q:'办理养老信托需要哪些材料？', a:'身份证明、受益人信息、资金来源说明等，具体以网点或公告为准。', t:'2025-08-25T09:30:00'}]
+      },
+      {id:'risk-qa', name:'风控合规问答', dept:'风控', owner:'风险合规部', status:'已发布', model:'Claude-3.5', rating:4.8, usage:1460, cost:610.7, tags:['合规','审计','法规检索'],
+        desc:'对接法规库与内控手册，提供条款检索、解释与留痕审计。',
+        versions:[{v:'2.1.0', note:'新增反洗钱关键词告警', time:'2025-08-12'}],
+        config:{kb:['监管条例库','内控制度集'], route:'法规优先 + 少样本提示', quota:'仅内网可用'},
+        dialogs:[{q:'私募资管业务的适当性要求有哪些？', a:'包含风险承受能力评估、信息披露、冷静期等，请参阅最新监管条文。', t:'2025-08-24T15:22:00'}]
+      },
+      {id:'research-analyst', name:'投研研报分析', dept:'投研', owner:'投资研究部', status:'草稿', model:'Qwen-Max', rating:4.1, usage:340, cost:95.2, tags:['研报','摘要','比对'],
+        desc:'上传研报自动生成提纲、要点比对和行业地图。',
+        versions:[{v:'0.3.0', note:'加入 PEST 与五力模型模板', time:'2025-08-22'}],
+        config:{kb:['研报仓库','财报数据'], route:'图表解析 + 结构化摘要', quota:'按需申请'},
+        dialogs:[{q:'对比两家光伏企业 24Q4 产能扩张计划。', a:'已生成对比表，含产能、成本、出货、订单等维度。', t:'2025-08-26T11:10:00'}]
+      },
+      {id:'employee-assistant', name:'员工事务助手', dept:'运营', owner:'运营管理部', status:'已发布', model:'DeepSeek-R1', rating:4.5, usage:1200, cost:310.9, tags:['流程','OA','指南'],
+        desc:'请假报销、流程指引、制度查询的一站式助手。',
+        versions:[{v:'1.0.0', note:'正式发布：覆盖 30+ 常用流程', time:'2025-08-15'}],
+        config:{kb:['OA流程库','制度手册'], route:'FAQ 优先 + 检索增强', quota:'公司全员'},
+        dialogs:[{q:'差旅报销需要哪些附件？', a:'机票行程单、酒店发票、出差审批单等，按制度第 3.2 条执行。', t:'2025-08-23T16:40:00'}]
+      }
+    ];
+
+    const dashboard = {
+      activeAgents: agents.length,
+      weeklySessions: 4800,
+      csat: 4.56,
+      resolution: 0.73,
+      cost: agents.reduce((s,a)=>s+a.cost,0).toFixed(1),
+      history:{
+        sessions:[300,420,500,610,720,900,810],
+        csat:[4.2,4.3,4.4,4.5,4.6,4.5,4.56],
+        cost:[220,260,300,340,380,420,460]
+      }
+    };
+
+    /* ===== 工具函数 ===== */
+    const $ = (sel,root=document)=>root.querySelector(sel);
+    const $$ = (sel,root=document)=>Array.from(root.querySelectorAll(sel));
+    const fmt = n => n>=1000 ? (n/1000).toFixed(1)+'k' : n;
+    const fmtDate = iso => new Date(iso).toLocaleString('zh-CN');
+    function escapeHTML(s){ return String(s||'').replace(/[&<>'"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c])); }
+
+    /* ===== 页面导航 ===== */
+    function goto(pageId){
+      $$('.seg [data-goto]').forEach(b=> b.setAttribute('aria-pressed', String(b.dataset.goto===pageId)));
+      $$('.page').forEach(p=> p.classList.toggle('active', p.id==='page-'+pageId));
+      if(pageId==='agents') $('#q').focus();
+    }
+    $$('.seg [data-goto]').forEach(b=> b.addEventListener('click', ()=> goto(b.dataset.goto)));
+    $$('.quick [data-goto]').forEach(b=> b.addEventListener('click', ()=> goto(b.dataset.goto)));
+
+    /* ===== 顶栏搜索：聚焦即跳目录并绑定输入 ===== */
+    $('#q-global').addEventListener('focus', ()=> goto('agents'));
+    $('#q-global').addEventListener('input', e => { $('#q').value = e.target.value; state.q = e.target.value.trim(); applyFilters(); });
+    document.addEventListener('keydown', e=>{
+      if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); $('#q-global').focus(); }
+    });
+
+    /* ===== 目录渲染 ===== */
+    const state = { q:'', sort:'recent', dept:'all', status:'all', model:'' };
+
+    function renderAgents(list){
+      const grid = $('#agentGrid');
+      grid.innerHTML = list.map(a=>{
+        const badge = a.status==='已发布'?'published':(a.status==='内测'?'beta':'draft');
+        const initials = a.name.slice(0,2);
+        return `<article class="agent" aria-labelledby="${a.id}-title">
+          <div class="row">
+            <div class="avatar" aria-hidden="true">${initials}</div>
+            <div>
+              <h3 id="${a.id}-title" style="margin:0">${a.name}</h3>
+              <div class="meta">${a.dept} · ${a.owner} · 评分 ${a.rating.toFixed(1)} · 使用 ${fmt(a.usage)}</div>
+            </div>
+            <div style="margin-left:auto"><span class="badge ${badge}">${a.status}</span></div>
+          </div>
+          <div class="meta">模型：${a.model}</div>
+          <p style="margin:0">${a.desc}</p>
+          <div>${a.tags.map(t=>`<span class="tag">#${t}</span>`).join('')}</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn primary" data-action="chat" data-id="${a.id}">对话</button>
+            <button class="btn" data-action="detail" data-id="${a.id}">详情</button>
+            <button class="btn ghost" data-action="publish" data-id="${a.id}">${a.status==='已发布'?'停用':'发布'}</button>
+          </div>
+        </article>`;
+      }).join('');
+    }
+
+    function applyFilters(){
+      let list = [...agents];
+      if(state.dept!=='all') list = list.filter(a=>a.dept===state.dept);
+      if(state.status!=='all') list = list.filter(a=>a.status===state.status);
+      if(state.model) list = list.filter(a=>a.model===state.model);
+      if(state.q){
+        const q = state.q.toLowerCase();
+        list = list.filter(a=> (a.name+a.dept+a.owner+a.tags.join(',')+a.desc).toLowerCase().includes(q));
+      }
+      if(state.sort==='rating') list.sort((a,b)=>b.rating-a.rating);
+      else if(state.sort==='usage') list.sort((a,b)=>b.usage-a.usage);
+      else list.sort((a,b)=> (b.versions?.[0]?.time||'').localeCompare(a.versions?.[0]?.time||''));
+      renderAgents(list);
+    }
+
+    /* ===== 火花线 ===== */
+    function spark(canvas, data){
+      const dpr = Math.max(1, window.devicePixelRatio||1);
+      const ctx = canvas.getContext('2d');
+      const w = canvas.clientWidth * dpr, h = canvas.clientHeight * dpr;
+      canvas.width=w; canvas.height=h; ctx.clearRect(0,0,w,h);
+      const max=Math.max(...data), min=Math.min(...data);
+      const pad=8*dpr; const step=(w-pad*2)/(data.length-1);
+      ctx.lineWidth=2*dpr; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+      ctx.beginPath();
+      data.forEach((v,i)=>{ const x=pad+i*step; const y=h-pad-((v-min)/(max-min||1))*(h-pad*2); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+      ctx.stroke();
+    }
+
+    /* ===== KPI 渲染（分析页 + 首页简报） ===== */
+    function renderKPIs(){
+      const wrap = $('#kpis');
+      wrap.innerHTML = ''
+        + cardKPI('活跃智能体', dashboard.activeAgents, dashboard.history.sessions)
+        + cardKPI('本周会话', fmt(dashboard.weeklySessions), dashboard.history.sessions)
+        + cardKPI('平均满意度', dashboard.csat.toFixed(2), dashboard.history.csat)
+        + cardKPI('预计成本(¥)', dashboard.cost, dashboard.history.cost);
+      $$('#kpis canvas').forEach((c,i)=> spark(c, [dashboard.history.sessions, dashboard.history.sessions, dashboard.history.csat, dashboard.history.cost][i] ));
+      // 首页简报
+      $('#st-agents').textContent = dashboard.activeAgents;
+      $('#st-sessions').textContent = fmt(dashboard.weeklySessions);
+      $('#st-csat').textContent = dashboard.csat.toFixed(2);
+      $('#st-resolution').textContent = (dashboard.resolution*100).toFixed(0)+'%';
+    }
+    function cardKPI(title,num){ return `<div class="kpi"><h4>${title}</h4><div class="num">${num}</div><canvas></canvas></div>`; }
+
+    /* ===== 详情弹窗（含评分持久化） ===== */
+    let currentAgent=null;
+    function openDetail(id){
+      currentAgent = agents.find(a=>a.id===id); if(!currentAgent) return;
+      $('#agentTitle').textContent = currentAgent.name;
+      $('#agentSub').textContent = `${currentAgent.dept} · ${currentAgent.status} · 模型 ${currentAgent.model}`;
+      $('#overviewKV').innerHTML = `
+        <div>负责人</div><div>${currentAgent.owner}</div>
+        <div>平均评分</div><div>${currentAgent.rating.toFixed(2)}</div>
+        <div>本月使用量</div><div>${fmt(currentAgent.usage)}</div>
+        <div>累计成本</div><div>¥${currentAgent.cost.toFixed?currentAgent.cost.toFixed(1):currentAgent.cost}</div>
+        <div>标签</div><div>${currentAgent.tags.map(t=>`<span class='tag'>#${t}</span>`).join(' ')}</div>
+        <div>最近版本</div><div>${currentAgent.versions?.[0]?.v||'-'} · ${currentAgent.versions?.[0]?.time||''}</div>`;
+      $('#cfgModel').textContent = currentAgent.model;
+      $('#cfgKB').textContent = currentAgent.config.kb.join('、');
+      $('#cfgRoute').textContent = currentAgent.config.route;
+      $('#cfgQuota').textContent = currentAgent.config.quota;
+      $('#compPII').textContent = $('#piiMask').checked ? '已开启' : '未开启';
+      $('#compAudit').textContent = $('#auditLog').checked ? '已开启' : '未开启';
+      $('#compPrompt').textContent = $('#promptGuard').checked ? '已开启' : '未开启';
+      $('#compRetention').textContent = $('#retention').value || '180天';
+
+      spark($('#agentUsage'), [10,20,30,25,40,55,48].map(x=> x*(0.7+Math.random()*0.6)));
+
+      const qa = $('#qaList');
+      qa.innerHTML = currentAgent.dialogs.map((d,idx)=> renderQA(currentAgent.id, idx, d)).join('');
+
+      const rb = $('#ratingsBody'); const rs = loadRatings(currentAgent.id);
+      rb.innerHTML = rs.map(r=>`<tr><td>${fmtDate(r.t)}</td><td>${r.score} ★</td><td>${escapeHTML(r.note||'')}</td></tr>`).join('');
+
+      const vb = $('#versionsBody');
+      vb.innerHTML = (currentAgent.versions||[]).map(v=>`<tr><td>${v.v}</td><td>${v.note}</td><td>${v.time}</td></tr>`).join('');
+
+      $('#agentModal').showModal();
+      switchTab('overview');
+    }
+
+    function renderQA(agentId, idx, d){
+      const key = `${agentId}::${idx}`;
+      const saved = JSON.parse(localStorage.getItem('rating:'+key) || 'null');
+      const score = saved?.score || 0; const note = saved?.note || '';
+      const stars = [1,2,3,4,5].map(n=>`<svg class="star ${score>=n?'filled':''}" data-key="${key}" data-score="${n}" viewBox="0 0 24 24" aria-label="评分${n}"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.77 5.82 22 7 14.14l-5-4.87 6.91-1.01z" fill="currentColor"/></svg>`).join('');
+      return `<div class="qa-item">
+        <div class="q">Q：${escapeHTML(d.q)}</div>
+        <div class="a">A：${escapeHTML(d.a)}</div>
+        <div class="rate"><span>评分：</span><div class="stars" role="radiogroup" aria-label="为答案打分">${stars}</div></div>
+        <textarea class="feedback" data-key="${key}" rows="2" placeholder="写下评价帮助改进…">${escapeHTML(note)}</textarea>
+      </div>`;
+    }
+
+    function switchTab(id){
+      $$('.tab').forEach(t=> t.classList.toggle('active', t.dataset.tab===id));
+      $$('.tabview').forEach(v=> v.hidden = v.id !== 'tab-'+id);
+    }
+
+    function saveRating(key, score, note){
+      localStorage.setItem('rating:'+key, JSON.stringify({score, note, t:new Date().toISOString()}));
+      const all = JSON.parse(localStorage.getItem('ratings:index')||'[]');
+      const idx = all.findIndex(x=>x.key===key);
+      const rec = {key, score, note, agent: currentAgent?.name || key.split('::')[0], qIndex: key.split('::')[1], t:new Date().toISOString()};
+      if(idx>-1) all[idx]=rec; else all.push(rec);
+      localStorage.setItem('ratings:index', JSON.stringify(all));
+      refreshFeedbackTable();
+    }
+    function loadRatings(agentId){
+      const all = JSON.parse(localStorage.getItem('ratings:index')||'[]');
+      return all.filter(r=> r.agent===(agents.find(a=>a.id===agentId)?.name)).sort((a,b)=>b.t.localeCompare(a.t));
+    }
+    function refreshFeedbackTable(){
+      const tbody = $('#feedbackTable');
+      const rows = JSON.parse(localStorage.getItem('ratings:index')||'[]')
+        .filter(r=> r.score<=3)
+        .sort((a,b)=>b.t.localeCompare(a.t))
+        .map(r=> `<tr><td>${fmtDate(r.t)}</td><td>${escapeHTML(r.agent)}</td><td>第${Number(r.qIndex)+1}条问答</td><td>${r.score}</td><td><span class="chip">待处理</span></td></tr>`)
+        .join('');
+      tbody.innerHTML = rows || `<tr><td colspan="5" style="text-align:center; color:var(--text-dim)">暂无低分反馈</td></tr>`;
+    }
+
+    /* ===== 导出 ===== */
+    function downloadJSON(filename, data){
+      const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url);
+    }
+
+    /* ===== 事件绑定 ===== */
+    window.addEventListener('DOMContentLoaded', ()=>{
+      $('#year').textContent = new Date().getFullYear();
+      // 首页简报 & 分析
+      renderKPIs();
+
+      // 目录筛选
+      $('#q').addEventListener('input', e=>{ state.q = e.target.value.trim(); applyFilters(); });
+      $('#sort').addEventListener('change', e=>{ state.sort = e.target.value; applyFilters(); });
+      $('#f-dept').addEventListener('change', e=>{ state.dept = e.target.value; applyFilters(); });
+      $('#f-status').addEventListener('change', e=>{ state.status = e.target.value; applyFilters(); });
+      $('#f-model').addEventListener('change', e=>{ state.model = e.target.value; applyFilters(); });
+
+      // 初渲染目录
+      applyFilters();
+
+      // 目录卡片按钮
+      $('#agentGrid').addEventListener('click', (e)=>{
+        const btn = e.target.closest('button'); if(!btn) return;
+        const id = btn.dataset.id; const act = btn.dataset.action;
+        if(act==='detail') openDetail(id);
+        if(act==='chat') {/* 此处对接实际 Chat 路由 */ window.open('#','_self'); }
+        if(act==='publish'){ const a=agents.find(x=>x.id===id); a.status = a.status==='已发布'?'草稿':'已发布'; applyFilters(); }
+      });
+
+      // 弹窗
+      $('#closeModal').addEventListener('click', ()=> $('#agentModal').close());
+      document.querySelector('.tabbar').addEventListener('click', e=>{ const t=e.target.closest('.tab'); if(t) switchTab(t.dataset.tab); });
+      $('#tab-dialog').addEventListener('click', (e)=>{
+        const star = e.target.closest('.star'); if(!star) return;
+        const key = star.dataset.key; const score = Number(star.dataset.score);
+        const parent = star.closest('.qa-item');
+        parent.querySelectorAll('.star').forEach(s=> s.classList.toggle('filled', Number(s.dataset.score)<=score));
+        const note = parent.querySelector('.feedback')?.value || '';
+        saveRating(key, score, note);
+      });
+      $('#tab-dialog').addEventListener('input', (e)=>{
+        const fb = e.target.closest('.feedback'); if(!fb) return;
+        const key = fb.dataset.key; const parent = fb.closest('.qa-item');
+        const score = [...parent.querySelectorAll('.star')].filter(s=>s.classList.contains('filled')).length;
+        saveRating(key, score, fb.value);
+      });
+
+      // 反馈/导出
+      refreshFeedbackTable();
+      $('#exportFeedback').addEventListener('click', ()=> downloadJSON('feedback-low-score.json', JSON.parse(localStorage.getItem('ratings:index')||'[]').filter(r=>r.score<=3)));
+      $('#exportDashboard').addEventListener('click', ()=> downloadJSON('dashboard.json', {dashboard, agents: agents.map(a=>({id:a.id,name:a.name,usage:a.usage,rating:a.rating,cost:a.cost}))}));
+
+      // 顶部快速按钮
+      $('#btn-new').addEventListener('click', ()=> goto('agents'));
+      $('#btn-publish').addEventListener('click', ()=> goto('settings'));
+      $('#btn-settings').addEventListener('click', ()=> goto('settings'));
+    });
+  </script>
+</body>
+</html>
